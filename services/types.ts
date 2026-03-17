@@ -13,6 +13,7 @@ export type Id = string;
 export interface House {
   name: string;
   ownerUid: Id;
+  code: string; // 8-char alphanumeric invite code
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -55,6 +56,7 @@ export interface Sector {
 
 export interface Task {
   name: string;
+  description?: string;
   sectorId: Id;
   frequency: TaskFrequency;
   defaultAssigned: boolean;

@@ -15,11 +15,13 @@ export async function createTask(params: {
   houseId: string;
   sectorId: string;
   name: string;
+  description?: string;
   frequency?: TaskFrequency;
   defaultAssigned?: boolean;
 }) {
   const data: Omit<Task, 'createdAt' | 'updatedAt'> & { createdAt: unknown; updatedAt: unknown } = {
     name: params.name.trim(),
+    description: params.description?.trim() || "",
     sectorId: params.sectorId,
     frequency: params.frequency ?? 'weekly',
     defaultAssigned: params.defaultAssigned ?? true,
@@ -35,6 +37,7 @@ export async function updateTask(params: {
   houseId: string;
   taskId: string;
   name?: string;
+  description?: string;
   sectorId?: string;
   frequency?: TaskFrequency;
   defaultAssigned?: boolean;
@@ -43,6 +46,7 @@ export async function updateTask(params: {
     updatedAt: serverTimestamp(),
   };
   if (params.name != null) patch.name = params.name.trim();
+  if (params.description != null) patch.description = params.description.trim() || undefined;
   if (params.sectorId != null) patch.sectorId = params.sectorId;
   if (params.frequency != null) patch.frequency = params.frequency;
   if (params.defaultAssigned != null) patch.defaultAssigned = params.defaultAssigned;

@@ -6,7 +6,7 @@ import type { Sector } from './types';
 export async function createSector(params: { houseId: string; name: string; description?: string }) {
   const data: Omit<Sector, 'createdAt' | 'updatedAt'> & { createdAt: unknown; updatedAt: unknown } = {
     name: params.name.trim(),
-    description: params.description?.trim() || undefined,
+    description: params.description?.trim() || "",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };

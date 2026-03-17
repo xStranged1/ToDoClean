@@ -48,6 +48,11 @@ export default function LoginScreen() {
             <Text>Crear cuenta</Text>
           </Button>
         </Link>
+        <Link href="/join" asChild>
+          <Button variant="ghost">
+            <Text>Unirse</Text>
+          </Button>
+        </Link>
       </View>
     </>
   );

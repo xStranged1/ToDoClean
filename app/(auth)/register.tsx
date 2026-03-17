@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { createHouse } from '@/services/houses';
-import { createUserAccount, addUserToHouse } from '@/services/users';
+import { createUserAccount, addUserToHouse, joinHouseByCode } from '@/services/users';
 import { useAuthStore } from '@/stores/authStore';
 import { router, Stack } from 'expo-router';
 import * as React from 'react';
@@ -16,6 +16,8 @@ export default function RegisterScreen() {
   const [loading, setLoading] = React.useState(false);
   const refreshHouses = useAuthStore((s) => s.refreshHouses);
   const user = useAuthStore((s) => s.user);
+  const pendingJoinCode = useAuthStore((s) => s.pendingJoinCode);
+  const setPendingJoinCode = useAuthStore((s) => s.setPendingJoinCode);
 
   React.useEffect(() => {
     if (user) router.replace('/(app)');
@@ -30,18 +32,27 @@ export default function RegisterScreen() {
         displayName,
       });
 
-      // Create first house for this user and add them to it.
-      const { houseId } = await createHouse({
-        name: houseName.trim() || 'Mi casa',
-        ownerUid: uid,
-      });
+      if (pendingJoinCode) {
+        await joinHouseByCode({
+          code: pendingJoinCode,
+          uid,
+          displayName: displayName.trim() || 'Usuario',
+        });
+        setPendingJoinCode(null);
+      } else {
+        // Create first house for this user and add them to it.
+        const { houseId } = await createHouse({
+          name: houseName.trim() || 'Mi casa',
+          ownerUid: uid,
+        });
 
-      await addUserToHouse({
-        houseId,
-        uid,
-        displayName: displayName.trim() || 'Owner',
-        role: 'owner',
-      });
+        await addUserToHouse({
+          houseId,
+          uid,
+          displayName: displayName.trim() || 'Owner',
+          role: 'owner',
+        });
+      }
 
       await refreshHouses();
     } finally {
@@ -58,10 +69,12 @@ export default function RegisterScreen() {
           <Text className="text-sm text-muted-foreground">Tu nombre</Text>
           <Input value={displayName} onChangeText={setDisplayName} />
         </View>
-        <View className="gap-2">
-          <Text className="text-sm text-muted-foreground">Nombre de la casa</Text>
-          <Input value={houseName} onChangeText={setHouseName} />
-        </View>
+        {!pendingJoinCode && (
+          <View className="gap-2">
+            <Text className="text-sm text-muted-foreground">Nombre de la casa</Text>
+            <Input value={houseName} onChangeText={setHouseName} />
+          </View>
+        )}
         <View className="gap-2">
           <Text className="text-sm text-muted-foreground">Email</Text>
           <Input value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />

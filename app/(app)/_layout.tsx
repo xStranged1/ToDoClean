@@ -12,6 +12,10 @@ export default function AppLayout() {
     if (!user) router.replace('/(auth)/login');
   }, [user, isBootstrapping]);
 
-  return <Stack />;
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
+  );
 }
 

@@ -8,6 +8,7 @@ import { getDoc, getDocs, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth } from './firebase';
 import { refs } from './refs';
 import type { AppUser, HouseRole, HouseUser, UserMembership } from './types';
+import { getHouseIdByCode } from './houses';
 
 export async function createUserAccount(params: {
   email: string;
@@ -97,3 +98,9 @@ export async function getHouseUser(houseId: string, uid: string) {
   return { id: snap.id, ...(snap.data() as HouseUser) };
 }
 
+export async function joinHouseByCode(params: { code: string; uid: string; displayName: string }) {
+  const houseId = await getHouseIdByCode(params.code);
+  if (!houseId) throw new Error('Invalid house code');
+  await addUserToHouse({ houseId, uid: params.uid, displayName: params.displayName, role: 'member' });
+  return { houseId };
+}

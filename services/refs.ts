@@ -10,6 +10,10 @@ export const refs = {
   houses: () => collection(db, 'houses'),
   house: (houseId: string) => doc(db, 'houses', houseId),
 
+  // House invite code index: `houseCodes/{code} -> { houseId }`
+  houseCodes: () => collection(db, 'houseCodes'),
+  houseCode: (code: string) => doc(db, 'houseCodes', code),
+
   // Per-user membership index
   memberships: (uid: string) => collection(db, 'users', uid, 'memberships'),
   membership: (uid: string, houseId: string) => doc(db, 'users', uid, 'memberships', houseId),

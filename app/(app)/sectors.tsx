@@ -9,6 +9,8 @@ import { ScrollView, View } from 'react-native';
 
 export default function SectorsScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
+  const activeHouseRole = useAuthStore((s) => s.activeHouseRole);
+  const canEdit = activeHouseRole === 'owner' || activeHouseRole === 'admin';
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [rows, setRows] = React.useState<{ id: string; name: string; description?: string }[]>([]);
@@ -35,14 +37,21 @@ export default function SectorsScreen() {
     <>
       <Stack.Screen options={{ title: 'Sectores' }} />
       <ScrollView className="flex-1 p-6">
-        <View className="gap-3">
-          <Text className="text-lg font-semibold">Crear sector</Text>
-          <Input value={name} onChangeText={setName} placeholder="Nombre" />
-          <Input value={description} onChangeText={setDescription} placeholder="Descripción (opcional)" />
-          <Button onPress={onCreate} disabled={!activeHouseId || !name.trim()}>
-            <Text>Crear</Text>
-          </Button>
-        </View>
+        {canEdit ? (
+          <View className="gap-3">
+            <Text className="text-lg font-semibold">Crear sector</Text>
+            <Input value={name} onChangeText={setName} placeholder="Nombre" />
+            <Input value={description} onChangeText={setDescription} placeholder="Descripción (opcional)" />
+            <Button onPress={onCreate} disabled={!activeHouseId || !name.trim()}>
+              <Text>Crear</Text>
+            </Button>
+          </View>
+        ) : (
+          <View className="gap-2">
+            <Text className="text-lg font-semibold">Sectores</Text>
+            <Text className="text-sm text-muted-foreground">Solo lectura (no tenés permisos para editar).</Text>
+          </View>
+        )}
 
         <View className="mt-6 gap-2">
           <Text className="text-lg font-semibold">Lista</Text>
