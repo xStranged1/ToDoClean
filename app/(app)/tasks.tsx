@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,11 +11,11 @@ import {
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
 import { listSectors } from '@/services/sectors';
-import { createTask, listTasksBySector } from '@/services/tasks';
+import { createTask, deleteTask, listTasksBySector, updateTask } from '@/services/tasks';
 import { useAuthStore } from '@/stores/authStore';
 import { Stack } from 'expo-router';
 import * as React from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { TaskItem } from '@/components/domain/TaskItem';
 
 export default function TasksScreen() {
@@ -26,6 +27,15 @@ export default function TasksScreen() {
   const [sectorId, setSectorId] = React.useState<string>('');
   const [taskName, setTaskName] = React.useState('');
   const [taskDescription, setTaskDescription] = React.useState('');
+  const [editing, setEditing] = React.useState<{
+    id: string;
+    name: string;
+    description?: string;
+    sectorId: string;
+  } | null>(null);
+  const [editName, setEditName] = React.useState('');
+  const [editDescription, setEditDescription] = React.useState('');
+  const [editSectorId, setEditSectorId] = React.useState('');
   const [rows, setRows] = React.useState<
     { id: string; name: string; description?: string; sectorId: string }[]
   >([]);
@@ -103,6 +113,41 @@ export default function TasksScreen() {
     await refresh();
   };
 
+  const openEdit = (row: { id: string; name: string; description?: string; sectorId: string }) => {
+    setEditing(row);
+    setEditName(row.name);
+    setEditDescription(row.description ?? '');
+    setEditSectorId(row.sectorId);
+  };
+
+  const onSaveEdit = async () => {
+    if (!activeHouseId || !editing) return;
+    await updateTask({
+      houseId: activeHouseId,
+      taskId: editing.id,
+      name: editName,
+      description: editDescription,
+      sectorId: editSectorId,
+    });
+    setEditing(null);
+    await refresh();
+  };
+
+  const onDelete = async (taskId: string) => {
+    if (!activeHouseId) return;
+    Alert.alert('Borrar tarea', '¿Seguro?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Borrar',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteTask({ houseId: activeHouseId, taskId });
+          await refresh();
+        },
+      },
+    ]);
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: 'Tareas' }} />
@@ -172,15 +217,57 @@ export default function TasksScreen() {
           </Text>
 
           {rows.map((t) => (
-            <TaskItem
-              key={t.id}
-              title={t.name}
-              description={t.description}
-              subtitle={`sectorId: ${t.sectorId}`}
-            />
+            <View key={t.id} className="gap-2">
+              <TaskItem title={t.name} description={t.description} subtitle={`sector: ${sectorId.label}`} />
+              {canEdit && (
+                <View className="flex-row gap-2">
+                  <Button size="sm" variant="secondary" onPress={() => openEdit(t)}>
+                    <Text>Editar</Text>
+                  </Button>
+                  <Button size="sm" variant="destructive" onPress={() => onDelete(t.id)}>
+                    <Text>Borrar</Text>
+                  </Button>
+                </View>
+              )}
+            </View>
           ))}
         </View>
       </ScrollView>
+
+      <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar tarea</DialogTitle>
+          </DialogHeader>
+          <View className="gap-3">
+            <View className="gap-2">
+              <Label>Sector</Label>
+              <Select value={editSectorId} onValueChange={setEditSectorId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar sector" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sectors.map((s) => (
+                    <SelectItem key={s.id} value={s.id} label={s.name}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </View>
+            <Input value={editName} onChangeText={setEditName} placeholder="Nombre" />
+            <Input value={editDescription} onChangeText={setEditDescription} placeholder="Descripción (opcional)" />
+          </View>
+          <DialogFooter>
+            <Button variant="secondary" onPress={() => setEditing(null)}>
+              <Text>Cancelar</Text>
+            </Button>
+            <Button onPress={onSaveEdit} disabled={!editName.trim() || !editSectorId}>
+              <Text>Guardar</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

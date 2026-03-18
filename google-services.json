@@ -8,6 +8,34 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:667447022124:android:adbffb7d69465ee901b789",
+        "android_client_info": {
+          "package_name": "com.fedevalle.appLimpieza"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "667447022124-7k8i32b5adajvsnccak65k9dekbbnmnr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fedevalle.appLimpieza",
+            "certificate_hash": "b74020699544e45eb5c9ca7a0736f53916bd9100"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC511Uu4kYjCF3yu-c8fVwg1OoFvpThAY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:667447022124:android:3a22313cb4ff591c01b789",
         "android_client_info": {
           "package_name": "com.myreactapp"
@@ -21,10 +49,6 @@
             "package_name": "com.myreactapp",
             "certificate_hash": "ba1b85bdff12c1ea5c541fa8cd3984a6eba8e973"
           }
-        },
-        {
-          "client_id": "667447022124-n6dam9tfgf3u1mmh6i5r8pv6vkrrlo1v.apps.googleusercontent.com",
-          "client_type": 3
         }
       ],
       "api_key": [
@@ -34,12 +58,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "667447022124-n6dam9tfgf3u1mmh6i5r8pv6vkrrlo1v.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

@@ -1,7 +1,10 @@
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { assignTasksToUser, getCurrentWeekPeriod } from '@/services/assignments';
-import { listTasks } from '@/services/tasks';
+import { listSectors } from '@/services/sectors';
+import { listTasksBySector } from '@/services/tasks';
 import { listUsersForHouse } from '@/services/users';
 import { useAuthStore } from '@/stores/authStore';
 import { Stack } from 'expo-router';
@@ -11,9 +14,19 @@ import { ScrollView, View } from 'react-native';
 export default function AssignScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
   const user = useAuthStore((s) => s.user);
+  const activeHouseRole = useAuthStore((s) => s.activeHouseRole);
+  // If role is still loading, we allow the UI to work and rely on Firestore rules later.
+  const canAssign = activeHouseRole === 'owner' || activeHouseRole === 'admin' || activeHouseRole === null;
   const [users, setUsers] = React.useState<{ id: string; uid: string; displayName: string }[]>([]);
   const [selectedUserId, setSelectedUserId] = React.useState<string>('');
   const [loading, setLoading] = React.useState(false);
+  const [sectors, setSectors] = React.useState<{ id: string; name: string }[]>([]);
+  const [selectedSectorIds, setSelectedSectorIds] = React.useState<Record<string, boolean>>({});
+  const [tasks, setTasks] = React.useState<{ id: string; name: string; sectorId: string }[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = React.useState<Record<string, boolean>>({});
+  const [userSearch, setUserSearch] = React.useState('');
+  const [sectorSearch, setSectorSearch] = React.useState('');
+  const [taskSearch, setTaskSearch] = React.useState('');
 
   React.useEffect(() => {
     let cancelled = false;
@@ -29,19 +42,63 @@ export default function AssignScreen() {
     };
   }, [activeHouseId]);
 
-  const onAssignDemo = async () => {
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!activeHouseId) return;
+      const s = await listSectors(activeHouseId);
+      if (cancelled) return;
+      setSectors(s.map((x) => ({ id: x.id, name: x.name })));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeHouseId]);
+
+  const selectedSectorIdList = React.useMemo(
+    () => Object.entries(selectedSectorIds).filter(([, v]) => v).map(([k]) => k),
+    [selectedSectorIds]
+  );
+  const selectedTasksCount = React.useMemo(
+    () => Object.values(selectedTaskIds).filter(Boolean).length,
+    [selectedTaskIds]
+  );
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!activeHouseId) return;
+      if (selectedSectorIdList.length === 0) {
+        setTasks([]);
+        setSelectedTaskIds({});
+        return;
+      }
+      const t = await listTasksBySector({ houseId: activeHouseId, sectorIds: selectedSectorIdList });
+      if (cancelled) return;
+      setTasks(t.map((x) => ({ id: x.id, name: x.name, sectorId: x.sectorId })));
+      // Keep selected tasks if still present, drop others
+      setSelectedTaskIds((prev) => {
+        const next: Record<string, boolean> = {};
+        for (const task of t) if (prev[task.id]) next[task.id] = true;
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeHouseId, selectedSectorIdList]);
+
+  const onAssign = async () => {
     if (!activeHouseId || !user || !selectedUserId) return;
     setLoading(true);
     try {
-      // Minimal demo: assign all tasks from all sectors would require sector selection UI.
-      // For now: assign all tasks in the house.
-      const tasks = await listTasks(activeHouseId);
+      const selectedTasks = tasks.filter((t) => selectedTaskIds[t.id]);
       await assignTasksToUser({
         houseId: activeHouseId,
         userId: selectedUserId,
         createdBy: user.uid,
         period: getCurrentWeekPeriod(),
-        tasks: tasks.map((t) => ({ taskId: t.id, sectorId: t.sectorId, name: t.name })),
+        tasks: selectedTasks.map((t) => ({ taskId: t.id, sectorId: t.sectorId, name: t.name })),
       });
     } finally {
       setLoading(false);
@@ -52,23 +109,82 @@ export default function AssignScreen() {
     <>
       <Stack.Screen options={{ title: 'Asignar' }} />
       <ScrollView className="flex-1 p-6">
-        <Text className="text-lg font-semibold">Asignar tareas (demo)</Text>
-        <Text className="text-sm text-muted-foreground">
-          Esta pantalla se completa después con selector de sectores/tareas. Por ahora arma un flujo end-to-end.
-        </Text>
+        <Text className="text-lg font-semibold">Asignar tareas</Text>
+        {activeHouseRole === 'member' && (
+          <Text className="text-sm text-muted-foreground">
+            Solo lectura (no tenés permisos para asignar).
+          </Text>
+        )}
 
         <View className="mt-4 gap-2">
           <Text className="font-medium">Usuario seleccionado</Text>
-          {users.map((u) => (
-            <Button key={u.uid} variant={u.uid === selectedUserId ? 'default' : 'secondary'} onPress={() => setSelectedUserId(u.uid)}>
-              <Text>{u.displayName}</Text>
-            </Button>
-          ))}
+          <Input value={userSearch} onChangeText={setUserSearch} placeholder="Buscar usuario…" />
+          {users
+            .filter((u) => u.displayName.toLowerCase().includes(userSearch.trim().toLowerCase()))
+            .map((u) => (
+              <Button
+                key={u.uid}
+                variant={u.uid === selectedUserId ? 'default' : 'secondary'}
+                onPress={() => setSelectedUserId(u.uid)}>
+                <Text>{u.displayName}</Text>
+              </Button>
+            ))}
+        </View>
+
+        <View className="mt-6 gap-2">
+          <Text className="font-medium">Sectores</Text>
+          <Input value={sectorSearch} onChangeText={setSectorSearch} placeholder="Buscar sector…" />
+          {sectors
+            .filter((s) => s.name.toLowerCase().includes(sectorSearch.trim().toLowerCase()))
+            .map((s) => (
+              <View
+                key={s.id}
+                className="flex-row items-center justify-between rounded-lg border border-border p-3">
+                <Text>{s.name}</Text>
+                <Checkbox
+                  checked={!!selectedSectorIds[s.id]}
+                  onCheckedChange={(v) =>
+                    setSelectedSectorIds((prev) => ({ ...prev, [s.id]: !!v }))
+                  }
+                />
+              </View>
+            ))}
+        </View>
+
+        <View className="mt-6 gap-2">
+          <Text className="font-medium">Tareas</Text>
+          <Input value={taskSearch} onChangeText={setTaskSearch} placeholder="Buscar tarea…" />
+          {tasks.length === 0 ? (
+            <Text className="text-sm text-muted-foreground">Seleccioná sectores para ver tareas.</Text>
+          ) : (
+            tasks
+              .filter((t) => t.name.toLowerCase().includes(taskSearch.trim().toLowerCase()))
+              .map((t) => (
+                <View
+                  key={t.id}
+                  className="flex-row items-center justify-between rounded-lg border border-border p-3">
+                  <View className="flex-1">
+                    <Text>{t.name}</Text>
+                    <Text className="text-xs text-muted-foreground">
+                      {sectors.find((s) => s.id === t.sectorId)?.name ?? t.sectorId}
+                    </Text>
+                  </View>
+                  <Checkbox
+                    checked={!!selectedTaskIds[t.id]}
+                    onCheckedChange={(v) =>
+                      setSelectedTaskIds((prev) => ({ ...prev, [t.id]: !!v }))
+                    }
+                  />
+                </View>
+              ))
+          )}
         </View>
 
         <View className="mt-6">
-          <Button onPress={onAssignDemo} disabled={!activeHouseId || !user || !selectedUserId || loading}>
-            <Text>{loading ? 'Asignando…' : 'Asignar (demo)'}</Text>
+          <Button
+            onPress={onAssign}
+            disabled={!canAssign || !activeHouseId || !user || !selectedUserId || loading || selectedTasksCount === 0}>
+            <Text>{loading ? 'Asignando…' : `Asignar (${selectedTasksCount})`}</Text>
           </Button>
         </View>
       </ScrollView>

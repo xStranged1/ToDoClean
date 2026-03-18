@@ -1,21 +1,46 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { getCurrentWeekAssignmentsForUser } from '@/services/weekly';
 import { useAuthStore } from '@/stores/authStore';
 import { signOut } from 'firebase/auth';
 import { Link, Stack } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
 
 import { auth } from '@/services/firebase';
+import { TaskItem } from '@/components/domain/TaskItem';
 
 export default function HomeScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
   const houses = useAuthStore((s) => s.houses);
-  const activeHouse = houses.find((h) => h.id === activeHouseId);
-  const [copied, setCopied] = React.useState(false);
+  const user = useAuthStore((s) => s.user);
+  const [weeklyTasks, setWeeklyTasks] = React.useState<
+    { taskId: string; name: string; sectorId: string; status: string }[]
+  >([]);
 
-  const inviteLink = activeHouse?.code ? `appLimpieza://join?code=${activeHouse.code}` : null;
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!activeHouseId || !user) return;
+      const assignments = await getCurrentWeekAssignmentsForUser({ houseId: activeHouseId, userId: user.uid });
+      if (cancelled) return;
+      const merged: { taskId: string; name: string; sectorId: string; status: string }[] = [];
+      for (const a of assignments) {
+        for (const t of a.tasks) {
+          merged.push({
+            taskId: t.taskId,
+            name: t.name,
+            sectorId: t.sectorId,
+            status: (a.statusByTask?.[t.taskId] as string) ?? 'pending',
+          });
+        }
+      }
+      setWeeklyTasks(merged);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeHouseId, user]);
 
   return (
     <>
@@ -27,28 +52,23 @@ export default function HomeScreen() {
             {activeHouseId ? houses.find((h) => h.id === activeHouseId)?.name ?? activeHouseId : 'Sin casa seleccionada'}
           </Text>
 
-          {!!inviteLink && (
-            <View className="gap-2 rounded-lg border border-border p-3">
-              <Text className="font-medium">Invitar por link</Text>
-              <Text className="text-sm text-muted-foreground">{inviteLink}</Text>
-              <Button
-                variant="secondary"
-                onPress={async () => {
-                  await Clipboard.setStringAsync(inviteLink);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1200);
-                }}>
-                <Text>{copied ? 'Copiado' : 'Copiar link'}</Text>
-              </Button>
-            </View>
-          )}
+          <View className="gap-2">
+            <Text className="text-lg font-semibold">Mis tareas (esta semana)</Text>
+            {weeklyTasks.length === 0 ? (
+              <Text className="text-sm text-muted-foreground">No tenés tareas asignadas esta semana.</Text>
+            ) : (
+              weeklyTasks.map((t) => (
+                <TaskItem
+                  key={t.taskId}
+                  title={t.name}
+                  subtitle={`estado: ${t.status}`}
+                  checked={t.status === 'completed' || t.status === 'verified'}
+                />
+              ))
+            )}
+          </View>
 
           <View className="gap-2">
-            <Link href="/(app)/users" asChild>
-              <Button>
-                <Text>Usuarios</Text>
-              </Button>
-            </Link>
             <Link href="/(app)/sectors" asChild>
               <Button variant="secondary">
                 <Text>Sectores</Text>

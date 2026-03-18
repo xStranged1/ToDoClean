@@ -6,7 +6,6 @@ import {
   setDoc,
   where,
   orderBy,
-  type Timestamp,
 } from 'firebase/firestore';
 
 import { refs } from './refs';
@@ -119,3 +118,17 @@ export async function getWeeklyHistory(params: { houseId: string; userId: string
   return rows.slice(0, params.limit ?? 12);
 }
 
+export async function getCurrentWeekAssignmentsForUser(params: { houseId: string; userId: string }) {
+  const period = getCurrentWeekPeriod();
+  // Note: Firestore can query Date fields; the SDK stores them as Timestamps.
+  const q = query(
+    refs.assignments(params.houseId),
+    where('userId', '==', params.userId),
+    where('periodType', '==', 'week'),
+    where('periodStart', '>=', period.periodStart),
+    where('periodStart', '<', period.periodEnd),
+    orderBy('periodStart', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Assignment) }));
+}
