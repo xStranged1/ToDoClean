@@ -9,6 +9,7 @@ import { ScrollView, View } from 'react-native';
 
 import { auth } from '@/services/firebase';
 import { TaskItem } from '@/components/domain/TaskItem';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function HomeScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
@@ -37,17 +38,18 @@ export default function HomeScreen() {
       }
       setWeeklyTasks(merged);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [activeHouseId, user]);
 
   return (
     <>
       <Stack.Screen options={{ title: 'Limpieza' }} />
       <ScrollView>
-        <View className="flex-1 gap-4 p-6 bg-background">
-          <Text className="text-xl font-semibold">Casa actual</Text>
+        <View className="flex-1 gap-4 p-6 bg-background mt-4">
+          <View className='flex flex-row justify-between mr-2'>
+            <Text className="text-xl font-semibold">Casa actual</Text>
+            <ThemeToggle />
+          </View>
           <Text className="text-muted-foreground">
             {activeHouseId ? houses.find((h) => h.id === activeHouseId)?.name ?? activeHouseId : 'Sin casa seleccionada'}
           </Text>

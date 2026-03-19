@@ -8,10 +8,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  type Option,
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
 import { listSectors } from '@/services/sectors';
 import { createTask, deleteTask, listTasksBySector, updateTask } from '@/services/tasks';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useAuthStore } from '@/stores/authStore';
 import { Stack } from 'expo-router';
 import * as React from 'react';
@@ -24,7 +26,7 @@ export default function TasksScreen() {
   const canEdit = activeHouseRole === 'owner' || activeHouseRole === 'admin';
 
   const [sectors, setSectors] = React.useState<{ id: string; name: string }[]>([]);
-  const [sectorId, setSectorId] = React.useState<string>('');
+  const [sectorId, setSectorId] = React.useState<Option | undefined>(undefined);
   const [taskName, setTaskName] = React.useState('');
   const [taskDescription, setTaskDescription] = React.useState('');
   const [editing, setEditing] = React.useState<{
@@ -35,7 +37,7 @@ export default function TasksScreen() {
   } | null>(null);
   const [editName, setEditName] = React.useState('');
   const [editDescription, setEditDescription] = React.useState('');
-  const [editSectorId, setEditSectorId] = React.useState('');
+  const [editSectorId, setEditSectorId] = React.useState<Option | undefined>(undefined);
   const [rows, setRows] = React.useState<
     { id: string; name: string; description?: string; sectorId: string }[]
   >([]);
@@ -50,7 +52,7 @@ export default function TasksScreen() {
       setSectors(mapped);
 
       if (!sectorId && mapped.length > 0) {
-        setSectorId(mapped[0].id);
+        setSectorId({ value: mapped[0].id, label: mapped[0].name });
       }
     };
 
@@ -64,7 +66,7 @@ export default function TasksScreen() {
     const loadTasks = async () => {
       const tasks = await listTasksBySector({
         houseId: activeHouseId,
-        sectorIds: [sectorId],
+        sectorIds: [sectorId.value],
       });
 
       setRows(
@@ -85,7 +87,7 @@ export default function TasksScreen() {
 
     const tasks = await listTasksBySector({
       houseId: activeHouseId,
-      sectorIds: [sectorId],
+      sectorIds: [sectorId.value],
     });
 
     setRows(
@@ -101,33 +103,43 @@ export default function TasksScreen() {
   const onCreate = async () => {
     if (!activeHouseId || !sectorId) return;
 
-    await createTask({
-      houseId: activeHouseId,
-      sectorId,
-      name: taskName,
-      description: taskDescription,
-    });
+    try {
+      await createTask({
+        houseId: activeHouseId,
+        sectorId: sectorId.value,
+        name: taskName,
+        description: taskDescription,
+      });
 
-    setTaskName('');
-    setTaskDescription('');
-    await refresh();
+      showSuccessToast('Tarea creada', 'Se creó la tarea correctamente.');
+
+      setTaskName('');
+      setTaskDescription('');
+      await refresh();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Ocurrió un error al crear la tarea.';
+      showErrorToast('Error', message);
+    }
   };
 
   const openEdit = (row: { id: string; name: string; description?: string; sectorId: string }) => {
     setEditing(row);
     setEditName(row.name);
     setEditDescription(row.description ?? '');
-    setEditSectorId(row.sectorId);
+    setEditSectorId({
+      value: row.sectorId,
+      label: sectors.find((s) => s.id === row.sectorId)?.name ?? row.sectorId,
+    });
   };
 
   const onSaveEdit = async () => {
-    if (!activeHouseId || !editing) return;
+    if (!activeHouseId || !editing || !editSectorId) return;
     await updateTask({
       houseId: activeHouseId,
       taskId: editing.id,
       name: editName,
       description: editDescription,
-      sectorId: editSectorId,
+      sectorId: editSectorId.value,
     });
     setEditing(null);
     await refresh();
@@ -197,7 +209,7 @@ export default function TasksScreen() {
 
             <Button
               onPress={onCreate}
-              disabled={!activeHouseId || !sectorId || !taskName.trim()}
+              disabled={!activeHouseId || !sectorId?.value || !taskName.trim()}
             >
               <Text>Crear</Text>
             </Button>
@@ -218,7 +230,11 @@ export default function TasksScreen() {
 
           {rows.map((t) => (
             <View key={t.id} className="gap-2">
-              <TaskItem title={t.name} description={t.description} subtitle={`sector: ${sectorId.label}`} />
+              <TaskItem
+                title={t.name}
+                description={t.description}
+                subtitle={`sector: ${sectors.find((s) => s.id === t.sectorId)?.name ?? t.sectorId}`}
+              />
               {canEdit && (
                 <View className="flex-row gap-2">
                   <Button size="sm" variant="secondary" onPress={() => openEdit(t)}>
@@ -242,7 +258,10 @@ export default function TasksScreen() {
           <View className="gap-3">
             <View className="gap-2">
               <Label>Sector</Label>
-              <Select value={editSectorId} onValueChange={setEditSectorId}>
+              <Select
+                value={editSectorId}
+                onValueChange={(value) => setEditSectorId(value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar sector" />
                 </SelectTrigger>

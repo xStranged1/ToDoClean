@@ -65,6 +65,14 @@ export default {
       "expo-secure-store",
       "expo-notifications",
       [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": true,
+          "barStyle": "light",
+          "visibility": "visible"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           photosPermission: "appLimpieza quiere acceder a tus imágenes para que puedas compartir una foto de perfil o crear un post",
