@@ -12,6 +12,8 @@ import * as React from 'react';
 
 import { useAuthStore } from '@/stores/authStore';
 import { CustomToast } from '@/components/ui/CustomToast';
+import CustomAlert from '@/components/ui/CustomAlert';
+import { useExpoUpdates } from '@/lib/useExpoUpdates';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -19,11 +21,19 @@ export {
 } from 'expo-router';
 
 export default function RootLayout() {
+
   const { colorScheme } = useColorScheme();
   const bootstrap = useAuthStore((s) => s.bootstrap);
+  const { updateAvailable, downloadAndReload } = useExpoUpdates();
+  const [showUpdateAlert, setShowUpdateAlert] = React.useState(false);
 
   React.useEffect(() => bootstrap(), [bootstrap]);
 
+  React.useEffect(() => {
+    if (updateAvailable) {
+      setShowUpdateAlert(true);
+    }
+  }, [updateAvailable]);
   return (
     <>
       <ToastProvider
@@ -43,6 +53,16 @@ export default function RootLayout() {
           <PortalHost />
         </ThemeProvider>
       </ToastProvider>
+      <CustomAlert
+        open={showUpdateAlert}
+        onOpenChange={setShowUpdateAlert}
+        title="Actualización disponible"
+        description="Hay una nueva versión de la aplicación disponible. ¿Deseas actualizar ahora?"
+        confirmLabel="Actualizar"
+        cancelLabel="Cancelar"
+        onConfirm={downloadAndReload}
+        onCancel={() => setShowUpdateAlert(false)}
+      />
     </>
   );
 }

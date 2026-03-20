@@ -20,6 +20,7 @@ type FirebaseConfig = {
   appId: string;
   measurementId?: string;
 };
+const extra = Constants.expoConfig?.extra || {};
 
 function getFirebaseConfig(): FirebaseConfig {
   // Prefer Expo public env var for apiKey (matches legacy), fallback to app.json extra if present.
@@ -70,3 +71,31 @@ export const auth: Auth = (() => {
 
 export const db: Firestore = getFirestore(firebaseApp);
 
+
+// Environment & API Config
+export const ENVIRONMENT = extra.environment || 'development';
+
+// ✅ Limpiar NGROK_URL de comillas extra
+const rawNgrokUrl = extra.localApiUrlNgrok || '';
+const cleanedNgrokUrl = rawNgrokUrl.trim().replace(/^['"]+|['"]+$/g, '');
+
+// Construir API_URL según el entorno
+let apiUrl: string;
+
+if (ENVIRONMENT === 'development') {
+  const localUrl = extra.localApiUrl || '192.168.0.164';
+  const port = extra.localApiPort || '8000';
+  apiUrl = `${localUrl}:${port}`;
+} else {
+  apiUrl = extra.productionApiUrl || 'https://api.xtremegym.com.ar';
+}
+
+export const API_URL = apiUrl;
+
+// Otras exportaciones
+export const ANDROID_CLIENT_ID = extra.androidClientId || '';
+export const CLIENT_ID = extra.clientId || '';
+export const IOS_ID = extra.iosId || '';
+export const NGROK_URL = cleanedNgrokUrl; // ✅ Usar versión limpia
+export const AWS_BUCKET = extra.awsBucket || '';
+export const APIKEY = extra.firebaseApiKey || '';
