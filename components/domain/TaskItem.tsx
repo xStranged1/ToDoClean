@@ -10,6 +10,7 @@ export type TaskItemProps = {
   title: string;
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
+  checkboxDisabled?: boolean;
   subtitle?: string;
   description?: string;
 };
@@ -34,7 +35,11 @@ export function TaskItem(props: TaskItemProps) {
             </TooltipContent>
           </Tooltip>
         )}
-        <Checkbox checked={!!props.checked} onCheckedChange={(v) => props.onCheckedChange?.(!!v)} />
+        <Checkbox
+          checked={!!props.checked}
+          disabled={props.checkboxDisabled}
+          onCheckedChange={(v) => props.onCheckedChange?.(!!v)}
+        />
       </View>
     </View>
   );

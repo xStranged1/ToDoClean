@@ -3,9 +3,10 @@ import {
   getDocs,
   query,
   serverTimestamp,
-  setDoc,
   where,
   orderBy,
+  updateDoc,
+  FieldPath,
 } from 'firebase/firestore';
 
 import { refs } from './refs';
@@ -69,17 +70,21 @@ export async function assignTasksToUser(params: {
   return { assignmentId: ref.id };
 }
 
+
 export async function updateTaskStatus(params: {
   houseId: string;
   assignmentId: string;
   taskId: string;
   newStatus: TaskStatus;
 }) {
-  const patch = {
-    [`statusByTask.${params.taskId}`]: params.newStatus,
-    updatedAt: serverTimestamp(),
-  };
-  await setDoc(refs.assignment(params.houseId, params.assignmentId), patch, { merge: true });
+  const ref = refs.assignment(params.houseId, params.assignmentId);
+  await updateDoc(
+    ref,
+    new FieldPath('statusByTask', params.taskId),
+    params.newStatus,
+    'updatedAt',
+    serverTimestamp()
+  );
 }
 
 export async function getAssignmentsForUser(params: {

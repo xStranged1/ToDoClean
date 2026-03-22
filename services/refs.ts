@@ -25,6 +25,9 @@ export const refs = {
   sectors: (houseId: string) => collection(db, 'houses', houseId, 'sectors'),
   sector: (houseId: string, sectorId: string) => doc(db, 'houses', houseId, 'sectors', sectorId),
 
+  oldTasks: () => collection(db, 'tasks'),
+  oldSectors: () => collection(db, 'sectors'),
+
   tasks: (houseId: string) => collection(db, 'houses', houseId, 'tasks'),
   task: (houseId: string, taskId: string) => doc(db, 'houses', houseId, 'tasks', taskId),
 

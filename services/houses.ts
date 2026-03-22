@@ -29,7 +29,6 @@ export function generateHouseCode(length = 8) {
 }
 
 async function reserveUniqueHouseCode() {
-  // Try a few times. Collisions are extremely unlikely but we handle them.
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateHouseCode(8);
     const codeRef = refs.houseCode(code);
@@ -44,7 +43,11 @@ async function reserveUniqueHouseCode() {
   throw new Error('Failed to reserve unique house code. Please retry.');
 }
 
-export async function createHouse(params: { name: string; ownerUid: string }) {
+export async function createHouse(params: {
+  name: string;
+  ownerUid: string;
+  ownerDisplayName?: string;
+}) {
   const code = await reserveUniqueHouseCode();
   const houseData = {
     name: params.name.trim(),
@@ -60,7 +63,11 @@ export async function createHouse(params: { name: string; ownerUid: string }) {
   const houseRef = await addDoc(refs.houses(), houseData);
 
   // Bind invite code -> houseId
-  await setDoc(refs.houseCode(code), { houseId: houseRef.id, updatedAt: serverTimestamp() }, { merge: true });
+  await setDoc(
+    refs.houseCode(code),
+    { houseId: houseRef.id, updatedAt: serverTimestamp() },
+    { merge: true }
+  );
 
   // Create membership/profile for the owner inside the house.
   const ownerHouseUser: Omit<HouseUser, 'createdAt' | 'updatedAt'> & {
@@ -68,7 +75,7 @@ export async function createHouse(params: { name: string; ownerUid: string }) {
     updatedAt: unknown;
   } = {
     uid: params.ownerUid,
-    displayName: 'Owner',
+    displayName: params.ownerDisplayName?.trim() || 'Owner',
     role: 'owner',
     inHome: true,
     canControl: true,
@@ -113,16 +120,16 @@ export async function listHousesForUser(uid: string): Promise<HouseSummary[]> {
   return houses.filter((h): h is HouseSummary => Boolean(h));
 }
 
-export async function setUserRole(params: {
-  houseId: string;
-  uid: string;
-  role: HouseRole;
-}) {
+export async function setUserRole(params: { houseId: string; uid: string; role: HouseRole }) {
   const membershipRef = refs.membership(params.uid, params.houseId);
   const houseUserRef = refs.houseUser(params.houseId, params.uid);
-  const roleUpdate = { role: params.role, updatedAt: serverTimestamp() };
+  const canControl = params.role !== 'member';
+  const roleUpdate = { role: params.role, canControl, updatedAt: serverTimestamp() };
 
-  await Promise.all([setDoc(membershipRef, roleUpdate, { merge: true }), setDoc(houseUserRef, roleUpdate, { merge: true })]);
+  await Promise.all([
+    setDoc(membershipRef, roleUpdate, { merge: true }),
+    setDoc(houseUserRef, roleUpdate, { merge: true }),
+  ]);
 }
 
 export async function getHouseIdByCode(codeRaw: string) {
@@ -132,4 +139,3 @@ export async function getHouseIdByCode(codeRaw: string) {
   if (!snap.exists()) return null;
   return (snap.data() as { houseId?: string }).houseId ?? null;
 }
-

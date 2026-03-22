@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { createHouse } from '@/services/houses';
-import { createUserAccount, addUserToHouse, joinHouseByCode } from '@/services/users';
+import { createUserAccount, joinHouseByCode } from '@/services/users';
 import { useAuthStore } from '@/stores/authStore';
 import { router, Stack } from 'expo-router';
 import * as React from 'react';
@@ -40,17 +40,10 @@ export default function RegisterScreen() {
         });
         setPendingJoinCode(null);
       } else {
-        // Create first house for this user and add them to it.
-        const { houseId } = await createHouse({
+        await createHouse({
           name: houseName.trim() || 'Mi casa',
           ownerUid: uid,
-        });
-
-        await addUserToHouse({
-          houseId,
-          uid,
-          displayName: displayName.trim() || 'Owner',
-          role: 'owner',
+          ownerDisplayName: displayName.trim() || 'Owner',
         });
       }
 
@@ -77,7 +70,12 @@ export default function RegisterScreen() {
         )}
         <View className="gap-2">
           <Text className="text-sm text-muted-foreground">Email</Text>
-          <Input value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+          <Input
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
         </View>
         <View className="gap-2">
           <Text className="text-sm text-muted-foreground">Contraseña</Text>
@@ -90,4 +88,3 @@ export default function RegisterScreen() {
     </>
   );
 }
-
