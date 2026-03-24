@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { assignTasksToUser, getCurrentWeekPeriod } from '@/services/assignments';
 import { listSectors } from '@/services/sectors';
 import { listTasksBySector } from '@/services/tasks';
@@ -100,7 +101,13 @@ export default function AssignScreen() {
         period: getCurrentWeekPeriod(),
         tasks: selectedTasks.map((t) => ({ taskId: t.id, sectorId: t.sectorId, name: t.name })),
       });
-    } finally {
+      showSuccessToast(`Tareas asignadas a ${users.find((u) => u.uid === selectedUserId)?.displayName || selectedUserId}`)
+    }
+    catch (e) {
+      console.error("Error asignando tareas", e);
+      showErrorToast("Error asignando tareas. Por favor, intentá de nuevo.");
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -108,7 +115,7 @@ export default function AssignScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Asignar' }} />
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
         <Text className="text-lg font-semibold">Asignar tareas</Text>
         {activeHouseRole === 'member' && (
           <Text className="text-sm text-muted-foreground">
@@ -152,8 +159,23 @@ export default function AssignScreen() {
         </View>
 
         <View className="mt-6 gap-2">
-          <Text className="font-medium">Tareas</Text>
-          <Input value={taskSearch} onChangeText={setTaskSearch} placeholder="Buscar tarea…" />
+          <View className='flex gap-2'>
+            <Text className="font-medium">Tareas</Text>
+            <Input value={taskSearch} onChangeText={setTaskSearch} placeholder="Buscar tarea…" />
+            <Button
+              onPress={() => {
+                // Select all tasks if any unselected, otherwise deselect all
+                const allSelected = selectedTasksCount === tasks.length;
+                const newSelectedTaskIds: Record<string, boolean> = {};
+                for (const t of tasks) newSelectedTaskIds[t.id] = !allSelected;
+                setSelectedTaskIds(newSelectedTaskIds);
+              }}
+              disabled={!canAssign || !activeHouseId || !user || !selectedUserId || loading}>
+              <Text>{loading ? 'Asignando…' : selectedTasksCount === tasks.length ? 'Deseleccionar todas' : `Seccionar todas (${tasks.length})`}</Text>
+            </Button>
+          </View>
+
+
           {tasks.length === 0 ? (
             <Text className="text-sm text-muted-foreground">Seleccioná sectores para ver tareas.</Text>
           ) : (

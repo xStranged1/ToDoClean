@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
@@ -121,55 +122,61 @@ export default function HomeScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Limpieza' }} />
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-        <View className="flex-1 gap-4 p-6 bg-background mt-4">
-          <View className="flex flex-row justify-between mr-2">
-            <Text className="text-xl font-semibold">Casa actual</Text>
-            <ThemeToggle />
-          </View>
-          <Text className="text-muted-foreground">
-            {activeHouseId ? houses.find((h) => h.id === activeHouseId)?.name ?? activeHouseId : 'Sin casa seleccionada'}
-          </Text>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}
+        />}>
+        <SafeAreaView>
 
-          <View className="gap-2">
-            <Text className="text-lg font-semibold">
-              {isOwnTasks ? 'Mis tareas (esta semana)' : `Tareas de ${selectedUserName} (esta semana)`}
+          <View className="flex-1 gap-4 p-6 bg-background mt-4">
+            <View className="flex flex-row justify-between mr-2">
+              <Text className="text-xl font-semibold">Casa actual</Text>
+              <ThemeToggle />
+            </View>
+            <Text className="text-muted-foreground">
+              {activeHouseId ? houses.find((h) => h.id === activeHouseId)?.name ?? activeHouseId : 'Sin casa seleccionada'}
             </Text>
-            {canCompleteOwn && (
-              <Button
-                variant="secondary"
-                disabled={submitting || weeklyTasks.length === 0}
-                onPress={() => updateMany(weeklyTasks, 'completed')}>
-                <Text>Marcar todas completadas</Text>
-              </Button>
-            )}
-            {canVerifyOthers && (
-              <Button
-                variant="secondary"
-                disabled={submitting || weeklyTasks.length === 0}
-                onPress={() => updateMany(weeklyTasks, 'verified')}>
-                <Text>Marcar todas controladas</Text>
-              </Button>
-            )}
-            {weeklyTasks.length === 0 ? (
-              <Text className="text-sm text-muted-foreground">No tenés tareas asignadas esta semana.</Text>
-            ) : (
-              weeklyTasks.map((t) => (
-                <TaskItem
-                  key={`${t.assignmentId}-${t.taskId}`}
-                  title={t.name}
-                  subtitle={`estado: ${t.status}`}
-                  checked={t.status === 'completed' || t.status === 'verified'}
-                  checkboxDisabled={!canEditTaskStatus || submitting}
-                  onCheckedChange={(checked) => {
-                    if (!canEditTaskStatus) return;
-                    void onToggleTask(t, checked);
-                  }}
-                />
-              ))
-            )}
+
+            <View className="gap-2">
+              <Text className="text-lg font-semibold">
+                {isOwnTasks ? 'Mis tareas (esta semana)' : `Tareas de ${selectedUserName} (esta semana)`}
+              </Text>
+              {canCompleteOwn && (
+                <Button
+                  variant="secondary"
+                  disabled={submitting || weeklyTasks.length === 0}
+                  onPress={() => updateMany(weeklyTasks, 'completed')}>
+                  <Text>Marcar todas completadas</Text>
+                </Button>
+              )}
+              {canVerifyOthers && (
+                <Button
+                  variant="secondary"
+                  disabled={submitting || weeklyTasks.length === 0}
+                  onPress={() => updateMany(weeklyTasks, 'verified')}>
+                  <Text>Marcar todas controladas</Text>
+                </Button>
+              )}
+              {weeklyTasks.length === 0 ? (
+                <Text className="text-sm text-muted-foreground">No tenés tareas asignadas esta semana.</Text>
+              ) : (
+                weeklyTasks.map((t) => (
+                  <TaskItem
+                    key={`${t.assignmentId}-${t.taskId}`}
+                    title={t.name}
+                    subtitle={`estado: ${t.status}`}
+                    checked={t.status === 'completed' || t.status === 'verified'}
+                    checkboxDisabled={!canEditTaskStatus || submitting}
+                    onCheckedChange={(checked) => {
+                      if (!canEditTaskStatus) return;
+                      void onToggleTask(t, checked);
+                    }}
+                  />
+                ))
+              )}
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </ScrollView>
     </>
   );

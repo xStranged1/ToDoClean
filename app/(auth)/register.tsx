@@ -20,7 +20,7 @@ export default function RegisterScreen() {
   const setPendingJoinCode = useAuthStore((s) => s.setPendingJoinCode);
 
   React.useEffect(() => {
-    if (user) router.replace('/(app)');
+    if (user) router.replace('/(app)/(tabs)');
   }, [user]);
 
   const onRegister = async () => {

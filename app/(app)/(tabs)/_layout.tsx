@@ -7,9 +7,12 @@ import { useAuthStore } from '@/stores/authStore';
 export default function TabsLayout() {
     const role = useAuthStore((s) => s.activeHouseRole);
     const isAdmin = role === 'owner' || role === 'admin';
+    const activeHouseId = useAuthStore((s) => s.activeHouseId);
 
     return (
-        <Tabs screenOptions={{ headerShown: false }}>
+        <Tabs
+            key={activeHouseId} // fuerza remount
+            screenOptions={{ headerShown: false }}>
             <Tabs.Screen
                 name="admin"
                 options={{
