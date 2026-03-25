@@ -24,7 +24,7 @@ export default function CustomAlert({
 }: ConfirmDialogProps) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange} className="px-2">
-            <AlertDialogContent className="max-w-md">
+            <AlertDialogContent className="max-w-xs">
                 <AlertDialogHeader>
                     <AlertDialogTitle className="text-2xl flex items-center gap-2">
                         {title}

@@ -1,7 +1,7 @@
 export default {
   expo: {
     owner: "fedevalle",
-    name: "appLimpieza",
+    name: "LimpiezaON",
     slug: "appLimpieza",
     version: "1.0.0",
     orientation: "portrait",
@@ -26,21 +26,21 @@ export default {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription:
-          "appLimpieza necesita acceder a la cámara para que puedas subir tu foto de perfil y compartir imágenes.",
+          "LimpiezaON necesita acceder a la cámara para que puedas subir tu foto de perfil y compartir imágenes.",
         NSPhotoLibraryUsageDescription:
-          "appLimpieza necesita acceder a tus fotos para seleccionar imágenes y personalizar tu perfil.",
+          "LimpiezaON necesita acceder a tus fotos para seleccionar imágenes y personalizar tu perfil.",
         NSPhotoLibraryAddUsageDescription:
-          "appLimpieza necesita permiso para guardar imágenes en tu galería subir tu foto de perfil y crear posts..",
+          "LimpiezaON necesita permiso para guardar imágenes en tu galería subir tu foto de perfil y compartir imágenes.",
         NSMicrophoneUsageDescription:
-          "appLimpieza necesita acceder al micrófono para grabar videos o audios dentro de la app.",
+          "LimpiezaON necesita acceder al micrófono para grabar videos o audios dentro de la app.",
         NSUserNotificationUsageDescription:
-          "appLimpieza usa notificaciones para informarte sobre entrenamientos, novedades y recordatorios.",
+          "LimpiezaON usa notificaciones para informarte sobre asignacion de tareas, novedades y recordatorios.",
         NSFaceIDUsageDescription:
-          "appLimpieza utiliza Face ID para proteger tu cuenta y facilitar el inicio de sesión.",
+          "LimpiezaON utiliza Face ID para proteger tu cuenta y facilitar el inicio de sesión.",
         NSDocumentsFolderUsageDescription:
-          "appLimpieza necesita acceder a documentos para importar o compartir archivos.",
+          "LimpiezaON necesita acceder a documentos para importar o compartir archivos.",
         NSDownloadsFolderUsageDescription:
-          "appLimpieza necesita acceder a descargas para gestionar archivos seleccionados por el usuario."
+          "LimpiezaON necesita acceder a descargas para gestionar archivos seleccionados por el usuario."
       },
       "usesAppleSignIn": true
     },
@@ -75,8 +75,8 @@ export default {
       [
         "expo-image-picker",
         {
-          photosPermission: "appLimpieza quiere acceder a tus imágenes para que puedas compartir una foto de perfil o crear un post",
-          cameraPermission: "appLimpieza quiere acceder a la cámara para que puedas compartir una foto de perfil o crear un post"
+          photosPermission: "LimpiezaON quiere acceder a tus imágenes para que puedas compartir una foto de perfil",
+          cameraPermission: "LimpiezaON quiere acceder a la cámara para que puedas compartir una foto de perfil"
         }
       ],
       ["expo-apple-authentication"]

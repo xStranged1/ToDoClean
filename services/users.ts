@@ -28,17 +28,23 @@ export async function createUserAccount(params: {
 
 export async function upsertGlobalUserProfile(user: FirebaseUser) {
   const data: Omit<AppUser, 'createdAt' | 'updatedAt'> & { createdAt: unknown; updatedAt: unknown } =
-    {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName ?? 'Usuario',
-      photoURL: user.photoURL ?? null,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+  {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName ?? 'Usuario',
+    photoURL: user.photoURL ?? null,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
   // Create if missing; otherwise merge to preserve createdAt in future we can refine.
   await setDoc(refs.user(user.uid), data, { merge: true });
+}
+
+export async function getMyUserByUid(uid: string) {
+  const snap = await getDoc(refs.user(uid));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...(snap.data() as AppUser) };
 }
 
 /**
@@ -55,23 +61,23 @@ export async function addUserToHouse(params: {
   const role: HouseRole = params.role ?? 'member';
 
   const houseUser: Omit<HouseUser, 'createdAt' | 'updatedAt'> & { createdAt: unknown; updatedAt: unknown } =
-    {
-      uid: params.uid,
-      displayName: params.displayName.trim() || 'Usuario',
-      role,
-      inHome: true,
-      canControl: role !== 'member',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+  {
+    uid: params.uid,
+    displayName: params.displayName.trim() || 'Usuario',
+    role,
+    inHome: true,
+    canControl: role !== 'member',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
   const membership: Omit<UserMembership, 'createdAt' | 'updatedAt'> & { createdAt: unknown; updatedAt: unknown } =
-    {
-      houseId: params.houseId,
-      role,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+  {
+    houseId: params.houseId,
+    role,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
   await Promise.all([
     setDoc(refs.houseUser(params.houseId, params.uid), houseUser, { merge: true }),

@@ -29,7 +29,7 @@ function deriveState(assignment: Assignment | undefined): EnrichedUser['state'] 
   const statuses = Object.values(assignment.statusByTask ?? {});
   if (statuses.length === 0) return 'active';
 
-  const allDone = statuses.every((s) => s === 'd' || s === 'verified');
+  const allDone = statuses.every((s) => s === 'done' || s === 'verified');
   if (allDone) return 'finished';
 
   const someDone = statuses.some((s) => s === 'done' || s === 'verified');

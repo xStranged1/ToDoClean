@@ -7,6 +7,7 @@ import * as React from 'react';
 import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/services/firebase';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -158,9 +159,9 @@ export default function SectorPriorityScreen() {
     setSaving(true);
     try {
       await savePriorityConfig(activeHouseId, config);
-      Alert.alert('Guardado', 'La configuración fue guardada correctamente.');
+      showSuccessToast('Guardado', 'La configuración fue guardada correctamente.');
     } catch (e) {
-      Alert.alert('Error', 'No se pudo guardar la configuración.');
+      showErrorToast('Error', 'No se pudo guardar la configuración.');
     } finally {
       setSaving(false);
     }
@@ -229,7 +230,9 @@ export default function SectorPriorityScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Prioridad de sectores' }} />
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-6"
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         {/* N-users tabs */}
         <Text className="text-lg font-semibold mb-3">Cantidad de usuarios</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
