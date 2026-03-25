@@ -60,6 +60,22 @@ async function loadUserOrder(houseId: string): Promise<string[] | null> {
   return (snap.data()?.order as string[]) ?? null;
 }
 
+function computeNextFromCurrent(
+  orderedUsers: { uid: string }[],
+  latestByUser: Record<string, string[]>,
+  rotationOffset: number
+): string[][] {
+  // 1. sacar slots actuales en orden de usuarios
+  let current = orderedUsers.map((u) => latestByUser[u.uid] ?? []);
+
+  // 2. aplicar offset (por múltiples semanas)
+  for (let i = 0; i < rotationOffset + 1; i++) {
+    current = rotateRight(current);
+  }
+
+  return current;
+}
+
 async function saveUserOrder(houseId: string, uids: string[]) {
   await setDoc(
     doc(db, 'houses', houseId, 'config', 'userOrder'),
@@ -221,8 +237,11 @@ export default function PassWeekScreen() {
         slotsPerPositionRef.current = slotsPerPosition;
 
         // Next = rotateRight once from current (rotationOffset = 0 on load)
-        const nextSlots = rotateRight([...slotsPerPosition]);
-        setNextRows(
+        const nextSlots = computeNextFromCurrent(
+          orderedUsers,
+          latestByUser,
+          0
+        ); setNextRows(
           orderedUsers.map((u, i) => ({
             uid: u.uid,
             displayName: u.displayName,
@@ -244,7 +263,11 @@ export default function PassWeekScreen() {
     if (loadState !== 'ready') return;
     const orderedUsers = orderedUsersRef.current;
     const slotsPerPosition = slotsPerPositionRef.current;
-    const nextSlots = computeNextSlots(orderedUsers, slotsPerPosition, rotationOffset);
+    const nextSlots = computeNextFromCurrent(
+      orderedUsers,
+      latestByUserRef.current,
+      rotationOffset
+    );
     setNextRows((prev) =>
       prev.map((r, i) => ({ ...r, nextSlot: nextSlots[i] }))
     );
@@ -264,8 +287,11 @@ export default function PassWeekScreen() {
     orderedUsersRef.current = newOrdered;
 
     // Recompute next slots based on new user order + current rotation offset
-    const nextSlots = computeNextSlots(newOrdered, slotsPerPositionRef.current, rotationOffset);
-
+    const nextSlots = computeNextFromCurrent(
+      newOrdered,
+      latestByUserRef.current,
+      rotationOffset
+    );
     // Update both sections in lockstep
     setNextRows(
       newOrdered.map((u, i) => ({
@@ -409,7 +435,7 @@ export default function PassWeekScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Pasar semana' }} />
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* Current assignments — ordered to match nextRows at all times */}
         <Text className="text-lg font-semibold mb-3">Sectores asignados actualmente</Text>

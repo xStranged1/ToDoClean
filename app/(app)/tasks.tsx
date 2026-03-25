@@ -164,7 +164,7 @@ export default function TasksScreen() {
     <>
       <Stack.Screen options={{ title: 'Tareas' }} />
 
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
         {canEdit ? (
           <View className="gap-3">
             <Text className="text-lg font-semibold">Crear tarea</Text>

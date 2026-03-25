@@ -6,6 +6,7 @@ import {
   where,
   orderBy,
   updateDoc,
+  deleteDoc,
   FieldPath,
 } from 'firebase/firestore';
 
@@ -14,7 +15,7 @@ import type { Assignment, AssignmentTaskSnapshot, PeriodType, TaskStatus } from 
 
 function startOfWeek(date: Date) {
   const d = new Date(date);
-  const day = d.getDay(); // 0 (Sun) ... 6 (Sat)
+  const day = d.getDay();
   const diffToMonday = (day + 6) % 7;
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() - diffToMonday);
@@ -65,11 +66,9 @@ export async function assignTasksToUser(params: {
     createdAt: serverTimestamp(),
   };
 
-  // We store JS Date for periodStart/end; Firestore SDK will serialize it as Timestamp.
   const ref = await addDoc(refs.assignments(params.houseId), data as unknown as Assignment);
   return { assignmentId: ref.id };
 }
-
 
 export async function updateTaskStatus(params: {
   houseId: string;
@@ -103,6 +102,21 @@ export async function getAssignmentsForUser(params: {
   return rows.filter((a) => a.periodType === params.periodType);
 }
 
+export async function deleteAssignmentsForUser(params: {
+  houseId: string;
+  userId: string;
+  periodType?: PeriodType;
+}) {
+  const assignments = await getAssignmentsForUser({
+    houseId: params.houseId,
+    userId: params.userId,
+    periodType: params.periodType ?? 'week',
+  });
+  await Promise.all(
+    assignments.map((a) => deleteDoc(refs.assignment(params.houseId, a.id)))
+  );
+}
+
 export async function getAssignmentsForHouse(params: { houseId: string; periodType?: PeriodType }) {
   const q = query(refs.assignments(params.houseId), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
@@ -125,7 +139,6 @@ export async function getWeeklyHistory(params: { houseId: string; userId: string
 
 export async function getCurrentWeekAssignmentsForUser(params: { houseId: string; userId: string }) {
   const period = getCurrentWeekPeriod();
-  // Note: Firestore can query Date fields; the SDK stores them as Timestamps.
   const q = query(
     refs.assignments(params.houseId),
     where('userId', '==', params.userId),

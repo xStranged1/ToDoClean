@@ -202,8 +202,8 @@ export default function ProfileScreen() {
               disabled={deleting}
             >
               <View className="flex-row items-center gap-2">
-                <Trash2 size={16} color={`${colorScheme == 'dark' ? '#fff' : '000'} `} />
-                <Text className="text-destructive-foreground">
+                <Trash2 size={16} color={`${colorScheme == 'dark' ? '#fff' : '#000'}`} />
+                <Text className="text-foreground">
                   {deleting ? 'Eliminando…' : 'Eliminar cuenta'}
                 </Text>
               </View>

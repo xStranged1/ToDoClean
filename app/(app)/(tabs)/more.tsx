@@ -9,7 +9,7 @@ export default function MoreScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Mas' }} />
-      <View className="flex-1 gap-4 p-6">
+      <View className="flex-1 gap-4 p-6 mt-8">
         <View className="gap-2">
           <Link href="/(app)/tasks" asChild>
             <Button variant="secondary">

@@ -73,7 +73,7 @@ export default function SectorsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Sectores' }} />
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
         {canEdit ? (
           <View className="gap-3">
             <Text className="text-lg font-semibold">Crear sector</Text>
@@ -110,7 +110,6 @@ export default function SectorsScreen() {
                   </View>
                 )}
               </View>
-              {!!s.description && <Text className="text-sm text-muted-foreground">{s.description}</Text>}
             </View>
           ))}
         </View>

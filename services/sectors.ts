@@ -37,3 +37,7 @@ export async function listSectors(houseId: string) {
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Sector) }));
 }
 
+export async function getSectorsForHouse(houseId: string): Promise<{ id: string; name: string }[]> {
+  const snap = await getDocs(refs.sectors(houseId)); // asegurate que refs.sectors exista
+  return snap.docs.map((d) => ({ id: d.id, name: (d.data() as { name: string }).name }));
+}
