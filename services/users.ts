@@ -41,6 +41,10 @@ export async function upsertGlobalUserProfile(user: FirebaseUser) {
   await setDoc(refs.user(user.uid), data, { merge: true });
 }
 
+export async function updateExpoPushToken(uid: string, token: string) {
+  await setDoc(refs.user(uid), { expoPushToken: token, updatedAt: serverTimestamp() }, { merge: true });
+}
+
 export async function getMyUserByUid(uid: string) {
   const snap = await getDoc(refs.user(uid));
   if (!snap.exists()) return null;

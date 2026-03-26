@@ -14,11 +14,25 @@ import { useAuthStore } from '@/stores/authStore';
 import { CustomToast } from '@/components/ui/CustomToast';
 import CustomAlert from '@/components/ui/CustomAlert';
 import { useExpoUpdates } from '@/lib/useExpoUpdates';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import { updateExpoPushToken } from '@/services/users';
 
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
 
@@ -26,6 +40,12 @@ export default function RootLayout() {
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const { updateAvailable, downloadAndReload } = useExpoUpdates();
   const [showUpdateAlert, setShowUpdateAlert] = React.useState(false);
+  const [expoPushToken, setExpoPushToken] = React.useState('');
+  const [channels, setChannels] = React.useState<Notifications.NotificationChannel[]>([]);
+  const [notification, setNotification] = React.useState<Notifications.Notification | undefined>(
+    undefined
+  );
+  const myUser = useAuthStore(s => s.myUser);
 
   React.useEffect(() => bootstrap(), [bootstrap]);
 
@@ -34,6 +54,83 @@ export default function RootLayout() {
       setShowUpdateAlert(true);
     }
   }, [updateAvailable]);
+
+  React.useEffect(() => {
+
+    if (Platform.OS === 'android') {
+      Notifications.getNotificationChannelsAsync().then(value => setChannels(value ?? []));
+    }
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (myUser) {
+      registerForPushNotificationsAsync(myUser.uid)
+    }
+  }, [myUser])
+
+  async function registerForPushNotificationsAsync(uid: string) {
+    let token;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('myNotificationChannel', {
+        name: 'A channel is needed for the permissions prompt to appear',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+      // Learn more about projectId:
+      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+      // EAS projectId is used here.
+      try {
+        const projectId =
+          Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+        if (!projectId) {
+          throw new Error('Project ID not found');
+        }
+        token = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId,
+          })
+        ).data;
+        console.log("ExpoPushToken seteado");
+        console.log(token);
+        updateExpoPushToken(uid, token);
+
+      } catch (e) {
+        token = `${e}`;
+      }
+    } else {
+      alert('Must use physical device for Push Notifications');
+    }
+
+    return token;
+  }
+
   return (
     <>
       <ToastProvider

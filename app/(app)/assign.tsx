@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { assignTasksToUser, getCurrentWeekPeriod } from '@/services/assignments';
+import { sendPushNotification } from '@/services/notifications';
 import { listSectors } from '@/services/sectors';
 import { listTasksBySector } from '@/services/tasks';
 import { listUsersForHouse } from '@/services/users';
@@ -101,6 +102,10 @@ export default function AssignScreen() {
         period: getCurrentWeekPeriod(),
         tasks: selectedTasks.map((t) => ({ taskId: t.id, sectorId: t.sectorId, name: t.name })),
       });
+      sendPushNotification(user.expoPushToken,
+        '¡Nuevas tareas asignadas!',
+        `Se te han asignado ${selectedTasks.length} tareas en el sector para esta semana!`
+      )
       showSuccessToast(`Tareas asignadas a ${users.find((u) => u.uid === selectedUserId)?.displayName || selectedUserId}`)
     }
     catch (e) {
