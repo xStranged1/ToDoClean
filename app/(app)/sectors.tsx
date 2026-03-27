@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { createSector, deleteSector, listSectors, updateSector } from '@/services/sectors';
 import { useAuthStore } from '@/stores/authStore';
+import { useTabStore } from '@/stores/tabStore';
 import { Stack } from 'expo-router';
 import * as React from 'react';
 import { Alert, ScrollView, View } from 'react-native';
@@ -24,6 +25,10 @@ export default function SectorsScreen() {
     const sectors = await listSectors(activeHouseId);
     setRows(sectors.map((s) => ({ id: s.id, name: s.name, description: s.description })));
   }, [activeHouseId]);
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Sectores');
+  }, [])
 
   React.useEffect(() => {
     refresh();
@@ -72,7 +77,6 @@ export default function SectorsScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Sectores' }} />
       <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
         {canEdit ? (
           <View className="gap-3">

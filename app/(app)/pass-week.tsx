@@ -6,6 +6,7 @@ import { listSectors } from '@/services/sectors';
 import { listTasksBySector } from '@/services/tasks';
 import { listUsersForHouse } from '@/services/users';
 import { useAuthStore } from '@/stores/authStore';
+import { useTabStore } from '@/stores/tabStore';
 import { Link, Stack } from 'expo-router';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import * as React from 'react';
@@ -166,6 +167,10 @@ export default function PassWeekScreen() {
   const orderedUsersRef = React.useRef<HouseUserRow[]>([]);
   // Latest Firestore sector assignments by uid (never changes after load)
   const latestByUserRef = React.useRef<Record<string, string[]>>({});
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Pasar de semana');
+  }, [])
 
   // ── Load ────────────────────────────────────────────────────────────────────
 
@@ -390,7 +395,6 @@ export default function PassWeekScreen() {
   if (loadState === 'loading') {
     return (
       <>
-        <Stack.Screen options={{ title: 'Pasar semana' }} />
         <View className="flex-1 items-center justify-center">
           <Text className="text-muted-foreground">Cargando…</Text>
         </View>
@@ -401,7 +405,6 @@ export default function PassWeekScreen() {
   if (loadState === 'no_config') {
     return (
       <>
-        <Stack.Screen options={{ title: 'Pasar semana' }} />
         <View className="flex-1 items-center justify-center gap-4 p-8">
           <Text className="text-center text-base font-medium">
             No hay prioridad de sectores configurada para la cantidad actual de usuarios en casa.
@@ -422,7 +425,6 @@ export default function PassWeekScreen() {
   if (loadState === 'error') {
     return (
       <>
-        <Stack.Screen options={{ title: 'Pasar semana' }} />
         <View className="flex-1 items-center justify-center p-8">
           <Text className="text-destructive text-center">
             Ocurrió un error al cargar los datos. Intentá de nuevo.
@@ -434,7 +436,6 @@ export default function PassWeekScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Pasar semana' }} />
       <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* Current assignments — ordered to match nextRows at all times */}

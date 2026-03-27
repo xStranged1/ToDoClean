@@ -10,12 +10,13 @@ import {
 import { listUsersForHouse } from '@/services/users';
 import { useAuthStore } from '@/stores/authStore';
 import { useTaskStore } from '@/stores/taskStore';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomAlert from '@/components/ui/CustomAlert';
 import { getSectorsForHouse } from '@/services/sectors';
+import { useTabStore } from '@/stores/tabStore';
 
 type TaskRow = {
   assignmentId: string;
@@ -59,6 +60,10 @@ export default function HomeScreen() {
   const [showDeleteAlert, setShowDeleteAlert] = React.useState(false);
 
   const { overrides, setOverride, clearOverride, clearAll } = useTaskStore();
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Limpieza');
+  }, [])
 
   const refresh = React.useCallback(async () => {
     if (!activeHouseId || !user || !selectedUserId) {
@@ -191,15 +196,10 @@ export default function HomeScreen() {
   const canVerifyOthers = !!selectedUserId && !isOwnTasks && isAdmin;
   const canCompleteOwn = isOwnTasks;
   const canEditTaskStatus = canCompleteOwn || canVerifyOthers;
-  console.log("weeklyTasks[0].sectorName");
-  console.log(weeklyTasks[0]);
-  console.log(weeklyTasks[0].sectorName);
-
   const grouped = React.useMemo(() => groupBySector(weeklyTasks), [weeklyTasks]);
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Limpieza' }} />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

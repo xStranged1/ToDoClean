@@ -13,6 +13,7 @@ import { ScrollView, View, Switch } from 'react-native';
 import { User, Home, Mail, ShieldCheck, Trash2, Camera } from 'lucide-react-native';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import CustomAlert from '@/components/ui/CustomAlert';
+import { useTabStore } from '@/stores/tabStore';
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
@@ -32,6 +33,10 @@ export default function ProfileScreen() {
   React.useEffect(() => {
     if (myUser?.displayName) setDisplayName(myUser.displayName);
   }, [myUser?.displayName]);
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Perfil');
+  }, [])
 
   // inHome status from houseUser — read-only
   const [inHome, setInHome] = React.useState<boolean | null>(null);
@@ -101,7 +106,6 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Perfil' }} />
 
       <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 40 }}>
         <View className="gap-6 p-6">

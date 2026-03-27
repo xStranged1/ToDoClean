@@ -9,7 +9,7 @@ export default function Screen() {
 
   React.useEffect(() => {
     if (isBootstrapping) return;
-    router.replace(user ? '/(app)' : '/(auth)/login');
+    router.replace(user ? '/(tabs)' : '/(auth)/login');
   }, [user, isBootstrapping]);
 
   return <Stack.Screen options={{ title: 'Loading…' }} />;

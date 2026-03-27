@@ -1,11 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { auth } from '@/services/firebase';
-import { Link, Stack } from 'expo-router';
+import { useTabStore } from '@/stores/tabStore';
+import { Link, router, Stack } from 'expo-router';
 import { signOut } from 'firebase/auth';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 export default function MoreScreen() {
+  useEffect(() => {
+    useTabStore.getState().setPrevTabTitle('Mas');
+  }, [])
   return (
     <>
       <Stack.Screen options={{ title: 'Mas' }} />
@@ -49,7 +54,10 @@ export default function MoreScreen() {
             </Button>
           </Link>
 
-          <Button variant="ghost" onPress={() => signOut(auth)}>
+          <Button variant="ghost" onPress={() => {
+            signOut(auth)
+            router.replace('/(auth)/login');
+          }}>
             <Text>Cerrar sesion</Text>
           </Button>
         </View>

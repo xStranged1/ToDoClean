@@ -8,6 +8,7 @@ import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/services/firebase';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { useTabStore } from '@/stores/tabStore';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -82,6 +83,11 @@ export default function SectorPriorityScreen() {
   // For the slot picker modal state
   const [editingSlotIndex, setEditingSlotIndex] = React.useState<number | null>(null);
   const [pickerSelected, setPickerSelected] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Prioridad de sectores');
+  }, [])
+
 
   React.useEffect(() => {
     if (!activeHouseId) return;

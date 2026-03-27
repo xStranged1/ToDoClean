@@ -46,8 +46,7 @@ export default function JoinHouseScreen() {
     });
 
     await refreshHouses();
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    router.replace('/(app)/(tabs)');
+    router.replace('/(tabs)');
   };
 
   // 👉 Auto-join solo si viene por parámetro

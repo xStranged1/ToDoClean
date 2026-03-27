@@ -11,6 +11,7 @@ import { UserRow } from '@/components/domain/UserRow';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Assignment } from '@/services/types';
 import { showErrorToast } from '@/lib/toast';
+import { useTabStore } from '@/stores/tabStore';
 
 type EnrichedUser = {
   id: string;
@@ -44,6 +45,10 @@ export default function UsersScreen() {
   const [currentUserCanControl, setCurrentUserCanControl] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Usuarios');
+  }, [])
 
   const load = React.useCallback(async () => {
     if (!activeHouseId) return;
@@ -127,7 +132,6 @@ export default function UsersScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Usuarios' }} />
       <ScrollView
         className="flex-1 p-6"
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -146,7 +150,7 @@ export default function UsersScreen() {
                 currentUserCanControl={currentUserCanControl}
                 onPress={(u) =>
                   router.push({
-                    pathname: '/(app)/(tabs)',
+                    pathname: '/(tabs)',
                     params: { selectedUserId: u.uid },
                   })
                 }
@@ -158,7 +162,7 @@ export default function UsersScreen() {
                 currentUserCanControl={currentUserCanControl}
                 onPress={(u) =>
                   router.push({
-                    pathname: '/(app)/(tabs)',
+                    pathname: '/(tabs)',
                     params: { selectedUserId: u.uid },
                   })
                 }

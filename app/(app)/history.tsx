@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Stack } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';
+import { useTabStore } from '@/stores/tabStore';
 
 export default function HistoryScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
@@ -64,7 +65,9 @@ export default function HistoryScreen() {
   React.useEffect(() => {
     refresh();
   }, [refresh]);
-
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Historial');
+  }, [])
   return (
     <>
       <Stack.Screen options={{ title: 'Historial' }} />

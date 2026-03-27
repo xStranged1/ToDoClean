@@ -45,7 +45,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="more"
                 options={{
-                    title: 'Más',
+                    title: 'Mas',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name="more-horiz" size={size} color={color} />
                     ),

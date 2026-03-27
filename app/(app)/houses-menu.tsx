@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAuthStore } from '@/stores/authStore';
+import { useTabStore } from '@/stores/tabStore';
 import { Link, Stack } from 'expo-router';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 export default function HousesMenuScreen() {
@@ -9,9 +11,12 @@ export default function HousesMenuScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
   const setActiveHouseId = useAuthStore((s) => s.setActiveHouseId);
 
+  useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Casas');
+  }, [])
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Casas' }} />
       <View className="flex-1 gap-4 p-6">
         <View className="gap-2 rounded-lg border border-border p-3">
           <Text className="font-medium">Tus casas</Text>

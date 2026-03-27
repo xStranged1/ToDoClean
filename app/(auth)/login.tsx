@@ -15,7 +15,8 @@ export default function LoginScreen() {
   const user = useAuthStore((s) => s.user);
 
   React.useEffect(() => {
-    if (user) router.replace('/(app)/(tabs)');
+    if (user) router.replace('/(tabs)');
+
   }, [user]);
 
   const onLogin = async () => {

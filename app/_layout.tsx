@@ -19,6 +19,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { updateExpoPushToken } from '@/services/users';
+import { useTabStore } from '@/stores/tabStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -39,6 +40,8 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const { updateAvailable, downloadAndReload } = useExpoUpdates();
+  const prevTabTitle = useTabStore((s) => s.prevTabTitle);
+  const actualTabTitle = useTabStore((s) => s.actualTabTitle);
   const [showUpdateAlert, setShowUpdateAlert] = React.useState(false);
   const [expoPushToken, setExpoPushToken] = React.useState('');
   const [channels, setChannels] = React.useState<Notifications.NotificationChannel[]>([]);
@@ -46,6 +49,7 @@ export default function RootLayout() {
     undefined
   );
   const myUser = useAuthStore(s => s.myUser);
+  const activeHouseId = useAuthStore(s => s.activeHouseId);
 
   React.useEffect(() => bootstrap(), [bootstrap]);
 
@@ -75,12 +79,12 @@ export default function RootLayout() {
   }, []);
 
   React.useEffect(() => {
-    if (myUser) {
-      registerForPushNotificationsAsync(myUser.uid)
+    if (myUser && activeHouseId) {
+      registerForPushNotificationsAsync(activeHouseId, myUser.uid)
     }
-  }, [myUser])
+  }, [myUser, activeHouseId])
 
-  async function registerForPushNotificationsAsync(uid: string) {
+  async function registerForPushNotificationsAsync(houseId: string, uid: string) {
     let token;
 
     if (Platform.OS === 'android') {
@@ -119,7 +123,7 @@ export default function RootLayout() {
         ).data;
         console.log("ExpoPushToken seteado");
         console.log(token);
-        updateExpoPushToken(uid, token);
+        updateExpoPushToken(houseId, uid, token);
 
       } catch (e) {
         token = `${e}`;
@@ -145,7 +149,8 @@ export default function RootLayout() {
         <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
           <Stack>
-            <Stack.Screen name="(app)" options={{ headerShown: false }} />
+            <Stack.Screen name="(app)" options={{ headerShown: true, title: actualTabTitle }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: prevTabTitle }} />
           </Stack>
           <PortalHost />
         </ThemeProvider>

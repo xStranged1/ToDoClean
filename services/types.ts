@@ -40,6 +40,7 @@ export interface UserMembership {
 export interface HouseUser {
   uid: Id;
   displayName: string;
+  expoPushToken?: string | null;
   role: HouseRole;
   inHome: boolean;
   canControl: boolean;

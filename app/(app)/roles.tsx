@@ -7,6 +7,7 @@ import { Stack } from 'expo-router';
 import * as React from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import type { HouseRole } from '@/services/types';
+import { useTabStore } from '@/stores/tabStore';
 
 type UserRow = {
   id: string;
@@ -49,6 +50,10 @@ export default function RolesScreen() {
     refresh();
   }, [refresh]);
 
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Roles');
+  }, [])
+
   const changeRole = async (user: UserRow, newRole: HouseRole) => {
     if (!activeHouseId) return;
     if (user.uid === currentUserUid) {
@@ -84,7 +89,6 @@ export default function RolesScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Roles' }} />
       <ScrollView className="flex-1 p-6">
         {!isOwner && (
           <Text className="mb-4 text-sm text-muted-foreground">

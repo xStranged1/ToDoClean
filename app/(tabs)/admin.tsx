@@ -8,6 +8,7 @@ import * as Clipboard from 'expo-clipboard';
 import { doc, getDocs, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import { refs } from '@/services/refs';
 import { Sector, Task } from '@/services/types';
+import { useTabStore } from '@/stores/tabStore';
 
 export default function AdminMenuScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
@@ -17,8 +18,12 @@ export default function AdminMenuScreen() {
   const [copied, setCopied] = React.useState(false);
   const role = useAuthStore((s) => s.activeHouseRole);
   const isAdmin = role === 'owner' || role === 'admin';
+
+  React.useEffect(() => {
+    useTabStore.getState().setPrevTabTitle('Admin');
+  }, [])
   if (!isAdmin) {
-    return <Redirect href="/(app)/(tabs)" />;
+    return <Redirect href="/(tabs)" />;
   }
   // async function listOldTasks() {
   //   const snap = await getDocs(query(refs.oldTasks()));

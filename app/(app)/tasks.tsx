@@ -19,6 +19,7 @@ import { Stack } from 'expo-router';
 import * as React from 'react';
 import { Alert, ScrollView, View } from 'react-native';
 import { TaskItem } from '@/components/domain/TaskItem';
+import { useTabStore } from '@/stores/tabStore';
 
 export default function TasksScreen() {
   const activeHouseId = useAuthStore((s) => s.activeHouseId);
@@ -41,6 +42,10 @@ export default function TasksScreen() {
   const [rows, setRows] = React.useState<
     { id: string; name: string; description?: string; sectorId: string }[]
   >([]);
+
+  React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Tareas');
+  }, [])
 
   // ✅ CARGA DE SECTORES
   React.useEffect(() => {
@@ -162,7 +167,6 @@ export default function TasksScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Tareas' }} />
 
       <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
         {canEdit ? (

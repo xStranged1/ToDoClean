@@ -9,7 +9,8 @@ import { listSectors } from '@/services/sectors';
 import { listTasksBySector } from '@/services/tasks';
 import { listUsersForHouse } from '@/services/users';
 import { useAuthStore } from '@/stores/authStore';
-import { Stack } from 'expo-router';
+import { useTabStore } from '@/stores/tabStore';
+import { router, Stack } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -21,6 +22,7 @@ export default function AssignScreen() {
   const canAssign = activeHouseRole === 'owner' || activeHouseRole === 'admin' || activeHouseRole === null;
   const [users, setUsers] = React.useState<{ id: string; uid: string; displayName: string }[]>([]);
   const [selectedUserId, setSelectedUserId] = React.useState<string>('');
+  const [selectedUser, setSelectedUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
   const [sectors, setSectors] = React.useState<{ id: string; name: string }[]>([]);
   const [selectedSectorIds, setSelectedSectorIds] = React.useState<Record<string, boolean>>({});
@@ -31,12 +33,16 @@ export default function AssignScreen() {
   const [taskSearch, setTaskSearch] = React.useState('');
 
   React.useEffect(() => {
+    useTabStore.getState().setActualTabTitle('Asignar tareas');
+  }, [])
+
+  React.useEffect(() => {
     let cancelled = false;
     (async () => {
       if (!activeHouseId) return;
       const rows = await listUsersForHouse(activeHouseId);
       if (cancelled) return;
-      setUsers(rows.map((u) => ({ id: u.id, uid: u.uid, displayName: u.displayName })));
+      setUsers(rows.map((u) => ({ id: u.id, uid: u.uid, displayName: u.displayName, expoPushToken: u.expoPushToken })));
       setSelectedUserId((prev) => prev || rows[0]?.uid || '');
     })();
     return () => {
@@ -91,7 +97,7 @@ export default function AssignScreen() {
   }, [activeHouseId, selectedSectorIdList]);
 
   const onAssign = async () => {
-    if (!activeHouseId || !user || !selectedUserId) return;
+    if (!activeHouseId || !user || !selectedUserId || !selectedUser) return;
     setLoading(true);
     try {
       const selectedTasks = tasks.filter((t) => selectedTaskIds[t.id]);
@@ -102,11 +108,11 @@ export default function AssignScreen() {
         period: getCurrentWeekPeriod(),
         tasks: selectedTasks.map((t) => ({ taskId: t.id, sectorId: t.sectorId, name: t.name })),
       });
-      sendPushNotification(user.expoPushToken,
+      sendPushNotification(selectedUser.expoPushToken,
         '¡Nuevas tareas asignadas!',
         `Se te han asignado ${selectedTasks.length} tareas en el sector para esta semana!`
       )
-      showSuccessToast(`Tareas asignadas a ${users.find((u) => u.uid === selectedUserId)?.displayName || selectedUserId}`)
+      showSuccessToast(`Tareas asignadas a ${selectedUser.displayName || selectedUserId}`)
     }
     catch (e) {
       console.error("Error asignando tareas", e);
@@ -119,7 +125,6 @@ export default function AssignScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Asignar' }} />
       <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 40 }}>
         <Text className="text-lg font-semibold">Asignar tareas</Text>
         {activeHouseRole === 'member' && (
@@ -137,7 +142,12 @@ export default function AssignScreen() {
               <Button
                 key={u.uid}
                 variant={u.uid === selectedUserId ? 'default' : 'secondary'}
-                onPress={() => setSelectedUserId(u.uid)}>
+                onPress={() => {
+                  setSelectedUserId(u.uid)
+                  setSelectedUser(u)
+                  console.log(u);
+
+                }}>
                 <Text>{u.displayName}</Text>
               </Button>
             ))}

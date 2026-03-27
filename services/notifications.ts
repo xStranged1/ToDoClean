@@ -4,16 +4,23 @@ export const sendPushNotification = async (
     body: string
 ) => {
     try {
+        const message = {
+            to: exponentPushToken,
+            sound: 'default',
+            title,
+            body,
+        };
+        console.log("message");
+        console.log(message);
+
         const response = await fetch("https://exp.host/--/api/v2/push/send", {
             method: "POST",
             headers: {
+                Accept: "application/json",
+                "Accept-encoding": "gzip, deflate",
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                to: exponentPushToken,
-                title,
-                body,
-            }),
+            body: JSON.stringify(message),
         });
 
         const data = await response.json();

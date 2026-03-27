@@ -41,8 +41,12 @@ export async function upsertGlobalUserProfile(user: FirebaseUser) {
   await setDoc(refs.user(user.uid), data, { merge: true });
 }
 
-export async function updateExpoPushToken(uid: string, token: string) {
-  await setDoc(refs.user(uid), { expoPushToken: token, updatedAt: serverTimestamp() }, { merge: true });
+export async function updateExpoPushToken(houseId: string, uid: string, token: string) {
+  Promise.all([
+    setDoc(refs.user(uid), { expoPushToken: token, updatedAt: serverTimestamp() }, { merge: true }),
+    setDoc(refs.houseUser(houseId, uid), { expoPushToken: token, updatedAt: serverTimestamp() }, { merge: true }),
+  ]);
+
 }
 
 export async function getMyUserByUid(uid: string) {
